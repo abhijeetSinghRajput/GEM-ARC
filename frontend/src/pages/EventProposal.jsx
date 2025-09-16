@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import api from '../libs/axios';
 
 function EventProposal() {
   const navigate = useNavigate();
@@ -143,7 +144,7 @@ function EventProposal() {
               <div>
                 <label className="block text-gray-700 font-medium mb-2">Time</label>
                 <input
-                  type="text"
+                  type="time"
                   name="time"
                   value={formData.time}
                   onChange={handleChange}
