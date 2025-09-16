@@ -163,18 +163,16 @@ export const approveEventProposal = async (req, res) => {
   try {
     const { id } = req.params;
     const { adminFeedback } = req.body;
-    
+
     const proposal = await EventProposal.findById(id).populate('proposedBy');
-    
     if (!proposal) {
       return res.status(404).json({ success: false, error: 'Proposal not found' });
     }
-    
+
     proposal.status = 'approved';
     proposal.adminFeedback = adminFeedback || 'Proposal approved';
     await proposal.save();
-    
-    // Create a new event from the proposal
+
     const newEvent = new Event({
       name: proposal.name,
       description: proposal.description,
@@ -184,69 +182,64 @@ export const approveEventProposal = async (req, res) => {
       venue: proposal.venue,
       thumbnail: proposal.thumbnail,
       skillsRequired: proposal.skillsRequired,
-      interestsTags: proposal.interestsTags
+      interestsTags: proposal.interestsTags,
     });
-    
+
     const savedEvent = await newEvent.save();
-    
-    // Notify the user who proposed the event
-    const notification = new Notification({
+
+    // Notify proposer
+    await new Notification({
       user: proposal.proposedBy._id,
       title: 'Event Proposal Approved!',
       message: `Your event proposal "${proposal.name}" has been approved.`,
       type: 'system',
-      link: `/events/${savedEvent._id}`
-    });
-    
-    await notification.save();
-    
-    // Find and notify users with matching skills or interests
+      link: `/events/${savedEvent._id}`,
+    }).save();
+
+    const tags = [
+      ...(savedEvent.skillsRequired || []),
+      ...(savedEvent.interestsTags || []),
+    ];
+
     const matchingUsers = await User.find({
-      $or: [
-        { skills: { $in: [...eventData.skillsRequired, ...eventData.interestsTags] } },
-        { interests: { $in: [...eventData.skillsRequired, ...eventData.interestsTags] } }
-      ]
+      $or: [{ skills: { $in: tags } }, { interests: { $in: tags } }],
     });
-    
+
     for (const user of matchingUsers) {
-      if (user._id.toString() !== proposal.proposedBy._id.toString()) {
-        const notification = new Notification({
+      if (!user._id.equals(proposal.proposedBy._id)) {
+        await new Notification({
           user: user._id,
           title: 'New Event Matching Your Profile!',
           message: `A new event "${proposal.name}" matches your skills or interests.`,
           type: 'event',
-          link: `/events/${savedEvent._id}`
-        });
-        
-        await notification.save();
-        
-        // Send SMS notification if phone number exists
+          link: `/events/${savedEvent._id}`,
+        }).save();
+
         if (user.phoneNumber) {
           try {
             await twilioClient.messages.create({
-              body: `New Event Alert!  
-          A fantastic new event, "${proposal.name}", that perfectly matches your profile is live now! 
-          Don't miss out! Explore more and register today at: https://gem-arc.netlify.app`,
+              body: `New Event Alert! "${proposal.name}" matches your profile. Check it out at https://gem-arc.netlify.app`,
               from: twilioPhoneNumber,
-              to: user.phoneNumber
+              to: user.phoneNumber,
             });
-          } catch (error) {
-            console.error('SMS notification error:', error);
+          } catch (smsErr) {
+            console.error('SMS notification error:', smsErr);
           }
         }
       }
     }
-    
+
     res.status(200).json({
       success: true,
       message: 'Proposal approved and event created',
       proposal,
-      event: savedEvent
+      event: savedEvent,
     });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
   }
 };
+
 
 // Reject event proposal
 export const rejectEventProposal = async (req, res) => {
