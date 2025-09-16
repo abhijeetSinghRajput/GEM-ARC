@@ -19,7 +19,7 @@ function Leaderboard() {
     const fetchLeaderboard = async () => {
       try {
         // Fetch leaderboard data
-        const leaderboardResponse = await api("/user/leaderboard", {
+        const leaderboardResponse = await api.get("/user/leaderboard", {
           headers: { Authorization: `Bearer ${token}` },
         });
 

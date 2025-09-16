@@ -17,7 +17,7 @@ function MyProposals() {
           throw new Error('No token found. Please login again.');
         }
         
-        const response = await api('/event-proposals/my-proposals', {
+        const response = await api.get('/event-proposals/my-proposals', {
           headers: { Authorization: `Bearer ${token}` }
         });
         

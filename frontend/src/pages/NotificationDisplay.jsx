@@ -17,7 +17,7 @@ const NotificationDisplay = () => {
         if (!token) return;
 
         // In a production app, you would fetch from your API
-        const response = await api("/notifications", {
+        const response = await api.get("/notifications", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const { data } = response;
@@ -39,8 +39,7 @@ const NotificationDisplay = () => {
       const token = localStorage.getItem("token");
 
       // In a production app, you would update on your API
-      await api(`/notifications/${id}/read`, {
-        method: "PUT",
+      await api.put(`/notifications/${id}/read`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -64,8 +63,7 @@ const NotificationDisplay = () => {
       const token = localStorage.getItem("token");
 
       // In a production app, you would update on your API
-      await api("/notifications/read-all", {
-        method: "PUT",
+      await api.put("/notifications/read-all", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

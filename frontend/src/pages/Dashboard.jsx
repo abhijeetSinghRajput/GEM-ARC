@@ -43,7 +43,7 @@ function Dashboard() {
     const fetchData = async () => {
       try {
         // Fetch user profile
-        const userResponse = await api("/user/profile", {
+        const userResponse = await api.get("/user/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -53,7 +53,7 @@ function Dashboard() {
         setCoins(coins || 0);
 
         // Fetch all events
-        const eventResponse = await api("/events/allEvents", {
+        const eventResponse = await api.get("/events/allEvents", {
           headers: { Authorization: `Bearer ${token}` },
         });
 

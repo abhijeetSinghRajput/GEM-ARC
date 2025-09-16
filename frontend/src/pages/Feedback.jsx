@@ -33,7 +33,7 @@ function Feedback() {
         throw new Error("No authentication token found. Please login again.");
       }
 
-      const response = await api("/events/allEvents", {
+      const response = await api.get("/events/allEvents", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -98,7 +98,7 @@ function Feedback() {
 
       //   console.log('Submitting feedback:', submissionData); // Debugging line
 
-      const response = await api("/feedback/submit", {
+      const response = await api.post("/feedback/submit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

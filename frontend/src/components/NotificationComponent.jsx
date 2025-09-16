@@ -15,7 +15,7 @@ const NotificationComponent = () => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const response = await api('/notifications', {
+        const response = await api.get('/notifications', {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -48,8 +48,7 @@ const NotificationComponent = () => {
   const markAsRead = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await api(`/notifications/${id}/read`, {
-        method: 'PUT',
+      const response = await api.put(`/notifications/${id}/read`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -66,8 +65,7 @@ const NotificationComponent = () => {
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await api('/notifications/read-all', {
-        method: 'PUT',
+      const response = await api.put('/notifications/read-all', {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'

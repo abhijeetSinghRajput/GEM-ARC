@@ -47,8 +47,7 @@ function EventProposal() {
         throw new Error('No token found. Please login again.');
       }
       
-      const response = await api('/event-proposals/propose', {
-        method: 'POST',
+      const response = await api.post('/event-proposals/propose', {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
