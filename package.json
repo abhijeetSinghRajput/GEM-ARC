@@ -1,0 +1,24 @@
+{
+  "name": "gem-arc",
+  "version": "1.0.0",
+  "description": "A event management system",
+  "main": "vite.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm i --prefix frontend && npm i --prefix backend",
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jyotiranjan0216/GEM-ARC.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jyotiranjan0216/GEM-ARC/issues"
+  },
+  "homepage": "https://github.com/jyotiranjan0216/GEM-ARC#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

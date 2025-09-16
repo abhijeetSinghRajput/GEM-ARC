@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+.formatted-message strong {
+  font-weight: 600;
+}
+.formatted-message div {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
