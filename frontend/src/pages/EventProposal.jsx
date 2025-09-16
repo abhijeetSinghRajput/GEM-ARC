@@ -1,31 +1,31 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import api from '../libs/axios';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+import api from "../libs/axios";
 
 function EventProposal() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    date: '',
-    time: '',
-    organizedBy: '',
-    venue: '',
-    thumbnail: '',
-    skillsRequired: '',
-    interestsTags: '',
+    name: "",
+    description: "",
+    date: "",
+    time: "",
+    organizedBy: "",
+    venue: "",
+    thumbnail: "",
+    skillsRequired: "",
+    interestsTags: "",
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -33,50 +33,53 @@ function EventProposal() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     // Convert comma-separated strings to arrays
     const submissionData = {
       ...formData,
-      skillsRequired: formData.skillsRequired.split(',').map(skill => skill.trim()),
-      interestsTags: formData.interestsTags.split(',').map(tag => tag.trim())
+      skillsRequired: formData.skillsRequired
+        .split(",")
+        .map((skill) => skill.trim()),
+      interestsTags: formData.interestsTags.split(",").map((tag) => tag.trim()),
     };
-    
+
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error('No token found. Please login again.');
+        throw new Error("No token found. Please login again.");
       }
-      
-      const response = await api.post('/event-proposals/propose', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(submissionData)
-      });
-    
-      
+
+      const response = await api.post(
+        "/event-proposals/propose",
+        submissionData, 
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       setSuccess(true);
       // Reset the form
       setFormData({
-        name: '',
-        description: '',
-        date: '',
-        time: '',
-        organizedBy: '',
-        venue: '',
-        thumbnail: '',
-        skillsRequired: '',
-        interestsTags: '',
+        name: "",
+        description: "",
+        date: "",
+        time: "",
+        organizedBy: "",
+        venue: "",
+        thumbnail: "",
+        skillsRequired: "",
+        interestsTags: "",
       });
-      
+
       // Show success message for 3 seconds then redirect to dashboard
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate("/dashboard");
       }, 3000);
-      
     } catch (err) {
-      console.error('Error submitting proposal:', err);
+      console.error("Error submitting proposal:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -88,24 +91,28 @@ function EventProposal() {
       <Sidebar />
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6">Propose an Event</h1>
-          
+          <h1 className="text-3xl font-bold text-gray-800 mb-6">
+            Propose an Event
+          </h1>
+
           {success && (
             <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
               Event proposal submitted successfully! Redirecting to dashboard...
             </div>
           )}
-          
+
           {error && (
             <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
               {error}
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Event Name</label>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Event Name
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -115,9 +122,11 @@ function EventProposal() {
                   required
                 />
               </div>
-              
+
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Organized By</label>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Organized By
+                </label>
                 <input
                   type="text"
                   name="organizedBy"
@@ -127,9 +136,11 @@ function EventProposal() {
                   required
                 />
               </div>
-              
+
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Date</label>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Date
+                </label>
                 <input
                   type="date"
                   name="date"
@@ -139,9 +150,11 @@ function EventProposal() {
                   required
                 />
               </div>
-              
+
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Time</label>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Time
+                </label>
                 <input
                   type="time"
                   name="time"
@@ -152,9 +165,11 @@ function EventProposal() {
                   required
                 />
               </div>
-              
+
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Venue</label>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Venue
+                </label>
                 <input
                   type="text"
                   name="venue"
@@ -164,9 +179,11 @@ function EventProposal() {
                   required
                 />
               </div>
-              
+
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Thumbnail URL</label>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Thumbnail URL
+                </label>
                 <input
                   type="url"
                   name="thumbnail"
@@ -178,9 +195,11 @@ function EventProposal() {
                 />
               </div>
             </div>
-            
+
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Description</label>
+              <label className="block text-gray-700 font-medium mb-2">
+                Description
+              </label>
               <textarea
                 name="description"
                 value={formData.description}
@@ -190,9 +209,11 @@ function EventProposal() {
                 required
               ></textarea>
             </div>
-            
+
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Skills Required (comma-separated)</label>
+              <label className="block text-gray-700 font-medium mb-2">
+                Skills Required (comma-separated)
+              </label>
               <input
                 type="text"
                 name="skillsRequired"
@@ -203,9 +224,11 @@ function EventProposal() {
                 required
               />
             </div>
-            
+
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Interest Tags (comma-separated)</label>
+              <label className="block text-gray-700 font-medium mb-2">
+                Interest Tags (comma-separated)
+              </label>
               <input
                 type="text"
                 name="interestsTags"
@@ -216,11 +239,11 @@ function EventProposal() {
                 required
               />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate("/dashboard")}
                 className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
               >
                 Cancel
@@ -230,7 +253,7 @@ function EventProposal() {
                 disabled={loading}
                 className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
               >
-                {loading ? 'Submitting...' : 'Submit Proposal'}
+                {loading ? "Submitting..." : "Submit Proposal"}
               </button>
             </div>
           </form>
