@@ -278,7 +278,6 @@ export const getEventById = async (req, res) => {
 // Add this function to your existing eventController.js file
 export const getUserRecommendedEvents = async (req, res) => {
   try {
-    console.log("hello");
     const userId = req.user._id;
     
     // Fetch the current user with their skills and interests
@@ -398,7 +397,7 @@ export const getUserRecommendedEvents = async (req, res) => {
     };
     
     // Send response
-    res.json({
+    res.stats(200).json({
       categorized,
       stats
     });

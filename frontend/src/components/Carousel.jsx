@@ -20,6 +20,7 @@ const RecommendedEventsCarousel = () => {
         const res = await api.get('/events/userRecommended', {
           headers: {
             Authorization: `Bearer ${token}`,
+            
           },
         });
         
