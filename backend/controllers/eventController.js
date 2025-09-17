@@ -397,7 +397,7 @@ export const getUserRecommendedEvents = async (req, res) => {
     };
     
     // Send response
-    res.stats(200).json({
+    res.status(200).json({
       categorized,
       stats
     });
