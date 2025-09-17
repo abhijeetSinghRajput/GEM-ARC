@@ -10,174 +10,197 @@ import User from '../models/User.js';
 export const getRecommendedEvents = async (req, res) => {
   try {
     const userId = req.user._id;
-    const user = await User.findById(userId);
-    
+    const user = await User.findById(userId).lean();
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // Get all upcoming events
-    const events = await Event.find({ 
-      date: { $gte: new Date() } 
-    }).sort({ date: 1 }); // Sort by date ascending
-    
-    if (events.length === 0) {
+
+    // Fetch all upcoming events
+    const events = await Event.find({
+      date: { $gte: new Date() },
+    })
+      .sort({ date: 1 })
+      .lean();
+
+    if (!events.length) {
       return res.json({ message: 'No upcoming events found', events: [] });
     }
 
-    // Define category keywords and their related terms
+    // Category mapping
     const categoryMapping = {
-      'tech': ['tech', 'technology', 'digital', 'software', 'hardware', 'computer', 'programming', 'coding', 'development', 'ai', 'machine learning', 'data science', 'blockchain', 'web', 'app'],
-      'business': ['business', 'entrepreneurship', 'startup', 'management', 'leadership', 'marketing', 'finance', 'investment'],
-      'creative': ['creative', 'design', 'art', 'music', 'film', 'photography', 'writing', 'content creation'],
-      'education': ['education', 'learning', 'workshop', 'seminar', 'course', 'training', 'lecture', 'conference'],
-      'social': ['social', 'networking', 'community', 'meetup', 'gathering']
+      tech: [
+        'tech',
+        'technology',
+        'digital',
+        'software',
+        'hardware',
+        'computer',
+        'programming',
+        'coding',
+        'development',
+        'ai',
+        'machine learning',
+        'data science',
+        'blockchain',
+        'web',
+        'app',
+      ],
+      business: [
+        'business',
+        'entrepreneurship',
+        'startup',
+        'management',
+        'leadership',
+        'marketing',
+        'finance',
+        'investment',
+      ],
+      creative: [
+        'creative',
+        'design',
+        'art',
+        'music',
+        'film',
+        'photography',
+        'writing',
+        'content creation',
+      ],
+      education: [
+        'education',
+        'learning',
+        'workshop',
+        'seminar',
+        'course',
+        'training',
+        'lecture',
+        'conference',
+      ],
+      social: ['social', 'networking', 'community', 'meetup', 'gathering'],
     };
-    
-    // Calculate score for each event
-    const scoredEvents = events.map(event => {
-      // Extract categories from event name and description
-      const eventNameLower = event.name.toLowerCase();
-      const eventDescLower = (event.description || '').toLowerCase();
+
+    // Score events
+    const scoredEvents = events.map((event) => {
+      const nameLower = (event.name || '').toLowerCase();
+      const descLower = (event.description || '').toLowerCase();
       const eventCategories = [];
-      
-      Object.entries(categoryMapping).forEach(([category, keywords]) => {
-        for (const keyword of keywords) {
-          if (eventNameLower.includes(keyword) || eventDescLower.includes(keyword)) {
-            if (!eventCategories.includes(category)) {
-              eventCategories.push(category);
-            }
-            break;
-          }
+
+      for (const [category, keywords] of Object.entries(categoryMapping)) {
+        if (keywords.some((kw) => nameLower.includes(kw) || descLower.includes(kw))) {
+          eventCategories.push(category);
         }
-      });
-      
-      // Calculate ranking factors
-      const popularityBoost = Math.log1p(event.participants?.length || 0) * 0.5;
-      
+      }
+
+      const popularityBoost =
+        Math.log1p(event.participants?.length || 0) * 0.5;
+
       const daysUntilEvent = Math.max(
-        0, 
+        0,
         (new Date(event.date) - new Date()) / (1000 * 60 * 60 * 24)
       );
-      
-      // Events happening soon get higher score
-      const proximityScore = Math.max(0, 10 - (daysUntilEvent / 7)) * 0.5; // Score decreases the further the event
-      
-      // Events with more complete information get higher score
-      const infoCompletenessScore = 
-        (event.name ? 0.5 : 0) + 
-        (event.description && event.description.length > 50 ? 1 : 0) + 
+      const proximityScore = Math.max(0, 10 - daysUntilEvent / 7) * 0.5;
+
+      const infoCompletenessScore =
+        (event.name ? 0.5 : 0) +
+        (event.description && event.description.length > 50 ? 1 : 0) +
         (event.image ? 0.5 : 0) +
         (event.location ? 0.5 : 0) +
         (eventCategories.length > 0 ? 1 : 0);
-      
-      // Final score calculation
-      const finalScore = popularityBoost + proximityScore + infoCompletenessScore;
-      
-      // Determine category type
-      let primaryCategory = 'uncategorized';
-      if (eventCategories.length > 0) {
-        primaryCategory = eventCategories[0]; // Just take the first category found
-      }
-      
+
+      const finalScore =
+        popularityBoost + proximityScore + infoCompletenessScore;
+
       return {
-        event: event,
+        event,
         score: finalScore,
         scoreComponents: {
           popularityBoost,
           proximityScore,
-          infoCompletenessScore
+          infoCompletenessScore,
         },
         eventCategories,
-        primaryCategory
+        primaryCategory: eventCategories[0] || 'uncategorized',
       };
     });
-    
-    // Sort events by score
+
+    // Sort by score
     scoredEvents.sort((a, b) => b.score - a.score);
-    
-    // Process events for response
-    const processedEvents = scoredEvents.map(item => {
-      const event = item.event.toObject();
-      
-      // Add recommendation info
-      event.recommendation = {
+
+    // Prepare response objects
+    const processedEvents = scoredEvents.map((item) => ({
+      ...item.event,
+      recommendation: {
         score: parseFloat(item.score.toFixed(2)),
         scoreBreakdown: {
-          popularityBoost: parseFloat(item.scoreComponents.popularityBoost.toFixed(2)),
-          proximityScore: parseFloat(item.scoreComponents.proximityScore.toFixed(2)),
-          infoCompletenessScore: parseFloat(item.scoreComponents.infoCompletenessScore.toFixed(2))
+          popularityBoost: parseFloat(
+            item.scoreComponents.popularityBoost.toFixed(2)
+          ),
+          proximityScore: parseFloat(
+            item.scoreComponents.proximityScore.toFixed(2)
+          ),
+          infoCompletenessScore: parseFloat(
+            item.scoreComponents.infoCompletenessScore.toFixed(2)
+          ),
         },
         categories: item.eventCategories,
-        primaryCategory: item.primaryCategory
-      };
-      
-      return event;
-    });
-    
-    // Group events by category
-    const categoryEvents = {};
-    Object.keys(categoryMapping).forEach(category => {
-      categoryEvents[category] = processedEvents.filter(
-        event => event.recommendation.categories.includes(category)
-      );
-    });
-    
-    // For events with no category, add to "other"
-    categoryEvents.other = processedEvents.filter(
-      event => !event.recommendation.categories || event.recommendation.categories.length === 0
+        primaryCategory: item.primaryCategory,
+      },
+    }));
+
+    // Group by category
+    const categoryEvents = Object.keys(categoryMapping).reduce(
+      (acc, cat) => {
+        acc[cat] = processedEvents.filter((e) =>
+          e.recommendation.categories.includes(cat)
+        );
+        return acc;
+      },
+      {}
     );
-    
-    // Add trending and upcoming events
+
+    categoryEvents.other = processedEvents.filter(
+      (e) => !e.recommendation.categories.length
+    );
+
+    // Trending & upcoming
     const trendingEvents = [...processedEvents]
-      .sort((a, b) => b.recommendation.scoreBreakdown.popularityBoost - a.recommendation.scoreBreakdown.popularityBoost)
+      .sort(
+        (a, b) =>
+          b.recommendation.scoreBreakdown.popularityBoost -
+          a.recommendation.scoreBreakdown.popularityBoost
+      )
       .slice(0, 10);
-      
+
     const upcomingEvents = [...processedEvents]
-      .sort((a, b) => a.date - b.date)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
       .slice(0, 10);
-    
-    // Organize the results
-    const response = {
-      // Full ranked list of recommended events
+
+    // Final response
+    return res.json({
       recommendations: processedEvents,
-      
-      // Events categorized by category for easier frontend display
       categorized: {
         trending: trendingEvents,
         upcoming: upcomingEvents,
-        tech: categoryEvents.tech,
-        business: categoryEvents.business,
-        creative: categoryEvents.creative,
-        education: categoryEvents.education,
-        social: categoryEvents.social,
-        other: categoryEvents.other
+        ...categoryEvents,
       },
-      
-      // Summary statistics for frontend display
       stats: {
         totalEvents: events.length,
         trendingCount: trendingEvents.length,
         upcomingCount: upcomingEvents.length,
-        techCount: categoryEvents.tech.length,
-        businessCount: categoryEvents.business.length,
-        creativeCount: categoryEvents.creative.length,
-        educationCount: categoryEvents.education.length,
-        socialCount: categoryEvents.social.length,
-        otherCount: categoryEvents.other.length
-      }
-    };
-    
-    return res.json(response);
-    
+        ...Object.fromEntries(
+          Object.keys(categoryEvents).map((c) => [c + 'Count', categoryEvents[c].length])
+        ),
+      },
+    });
   } catch (err) {
     console.error('Error in recommendation engine:', err);
-    return res.status(500).json({ 
+    res.status(500).json({
       message: 'Error generating event recommendations',
-      error: err.message 
+      error: err.message,
     });
   }
 };
+
 
 export const joinEvent = async (req, res) => {
   const { eventId, role } = req.body;

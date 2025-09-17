@@ -45,6 +45,8 @@ const RecommendedEventsCarousel = () => {
     fetchUserRecommendedEvents();
   }, []);
 
+  console.log(events);
+
   useEffect(() => {
     if (events.length === 0 || !autoplay) return;
     
