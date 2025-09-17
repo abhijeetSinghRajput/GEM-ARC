@@ -37,14 +37,17 @@ const NotificationDisplay = () => {
   const markAsRead = async (id) => {
     try {
       const token = localStorage.getItem("token");
-
       // In a production app, you would update on your API
-      await api.put(`/notifications/${id}/read`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      await api.put(
+        `/notifications/${id}/read`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       // Update local state
       setNotifications((prev) =>

@@ -33,13 +33,14 @@ const EventProposalList = () => {
     }
 
     setProcessing(true);
+    const token = localStorage.getItem("token"); 
     try {
-      await api.put(
+      const res = await api.put(
         `/admin/event-proposals/approve/${selectedProposal._id}`,
         { adminFeedback },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // ✅ send token
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -57,6 +58,7 @@ const EventProposalList = () => {
       setActionType(null);
       setAdminFeedback("");
     } catch (err) {
+      console.log(err);
       toast.error(err.response?.data?.error || "Failed to approve proposal");
     } finally {
       setProcessing(false);
